@@ -8,7 +8,7 @@ var bot = function(){
         //var sceneSmallest = runScenerios(gm, i); //up
         var scene = runScenerio(gm, i);
         var sceneAvailable = scene.grid.availableCells().length
-        var sceneDiff = computePairDistances(scene);
+        var sceneDiff = recursive_diffs(scene, i, 0);
         if(sceneDiff < best && scene.moved)
         {
             move = i;
@@ -24,8 +24,46 @@ var bot = function(){
 
     }
     gm.move(move);
-    if(!gm.won);
-    setTimeout(bot, 50);
+    if(!gm.won)
+        setTimeout(bot, 50);
+};
+
+var recursive_diffs = function(gm, dir, counter)
+{
+    var distance = 0;
+    var scene = runScenerio(gm, dir);
+    if(counter < 6 && scene.movesAvailable())
+    {
+        var cells = scene.grid.availableCells();
+        for(var j=0; j<cells.length; j++)
+        {
+            var bestOfSet = Number.MAX_VALUE;
+            for(var i=0; i<4; i++)
+            {
+                 var be = new botEngine(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
+                 be.grid = new Grid(gm.grid.size, gm.grid.serialize().cells);
+                 var tile = new Tile(cells[j], 2);
+                 be.grid.insertTile(tile);
+                 if(runScenerio(be, i).moved)
+                 {
+                     var s_diff = recursive_diffs(be, i, ++counter);
+                      if(runScenerio(be, i).grid.availableCells().length < 5)
+                      {
+                        s_diff += 1000;
+                      }
+                     if(s_diff<bestOfSet)
+                        bestOfSet = s_diff;
+
+                 }
+            }
+            distance += bestOfSet;
+        }
+    }
+    else if(counter>=6)
+        distance = computePairDistances(scene);
+    else
+        distance = 100000;
+    return distance;
 };
 
 var runScenerios = function(gm, dir){
@@ -132,12 +170,12 @@ var checkDiff = function(scene, value, tx, ty)
                 if(tile)
                 {
                     var dist = (value/tile.value>tile.value/value?value/tile.value:tile.value/value)-1;
-                    distance += dist*dist*dist;
+                    distance += dist*dist;
                 }
                 else
                 {
                     var dist = (value/2)-1
-                    distance += dist*dist*dist;
+                    distance += dist*dist;
                 }
             }
         }
