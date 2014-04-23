@@ -31,7 +31,7 @@ var bot = function(){
 var recursive_diffs = function(gm, dir, counter)
 {
     counter++;
-    var distance = computePairDistances(gm);
+    var distance = computeDifferences(gm);
     var scene = runScenerio(gm, dir);
     if(counter < 3 && scene.movesAvailable())
     {
@@ -56,11 +56,6 @@ var recursive_diffs = function(gm, dir, counter)
                      var s_diffTwo = 0.9*recursive_diffs(be, i, counter);
                      var s_diffFour= 0.1*recursive_diffs(bFour, i, counter);
                      var s_diff = s_diffTwo+s_diffFour;
-                     var avail = runScenerio(be, i).grid.availableCells().length;
-                      if(avail < 8)
-                      {
-                        s_diff *= (8-avail);
-                      }
                      if(s_diff<bestOfSet)
                      {
                         pathCount++;
@@ -81,6 +76,14 @@ var recursive_diffs = function(gm, dir, counter)
     }
     else if(!scene.movesAvailable())
         distance = 50000;
+    else if(counter >=3)
+    {
+      var avail = scene.grid.availableCells().length;
+      if(avail < 9)
+      {
+        distance *= (9-avail);
+      }
+    }
     delete scene;
     return distance;
 };
@@ -200,6 +203,79 @@ var checkDiff = function(scene, value, tx, ty)
         }
     }
     return distance;
+};
+
+var computeDifferences = function(scene)
+{
+    var distance = 1;
+     for (var x = 0; x < scene.size; x++) {
+        for (var y = 0; y < scene.size; y++) {
+          var tile = scene.grid.cellContent({ x: x, y: y });
+          var value = 2;
+          if (tile) {
+                value = tile.value;
+          }
+          var tileMulti = 1;
+          if(x-1 > 0 && x+1 < 4)
+          {
+            var rValue = 2;
+            var right = scene.grid.cellContent({ x: x+1, y: y });
+            if (right) {
+                    rValue = right.value;
+              }
+            var lValue = 2;
+            var left = scene.grid.cellContent({ x: x-1, y: y });
+            if (left) {
+                    lValue = left.value;
+              }
+            if((value > rValue && value > lValue) || (value < rValue && value < lValue))
+              tileMulti++;
+          }
+          if(y-1 > 0 && y+1 < 4)
+          {
+              var uValue = 2;
+              var up = scene.grid.cellContent({ x: x, y: y-1 });
+              if (up) {
+                      uValue = up.value;
+                }
+              var dValue = 2;
+              var down = scene.grid.cellContent({ x: x, y: y+1 });
+              if (down) {
+                      dValue = down.value;
+                }
+              if((value > dValue && value > uValue) || (value < dValue && value < uValue))
+                tileMulti++;
+          }
+
+          if(x+1 < 4)
+          {
+            var rValue = 2;
+            var right = scene.grid.cellContent({ x: x+1, y: y });
+            if (right) {
+                    rValue = right.value;
+              }
+            var dist = (value/rValue>rValue/value?value/rValue:rValue/value);
+            distance *= dist+tileMulti;
+            //distance += Math.abs(value-rValue);
+          }
+          if(y+1 < 4)
+          {
+              var dValue = 2;
+              var down = scene.grid.cellContent({ x: x, y: y+1 });
+              if (down) {
+                      dValue = down.value;
+                }
+              var dist = (value/dValue>dValue/value?value/dValue:dValue/value);
+              distance *= dist+tileMulti;
+          }
+        }
+      }
+    return distance;
+};
+
+var computeTileDiff = function(scene, tValue, x, y)
+{
+
 }
 
 
