@@ -59,7 +59,7 @@ var recursive_diffs = function(gm, dir, counter)
                      var avail = runScenerio(be, i).grid.availableCells().length;
                       if(avail < 8)
                       {
-                        s_diff += 500*(8-avail);
+                        s_diff *= (8-avail);
                       }
                      if(s_diff<bestOfSet)
                      {
@@ -178,7 +178,7 @@ var checkDistances = function(scene, value, tx, ty)
 
 var checkDiff = function(scene, value, tx, ty)
 {
-    var distance = 0;
+    var distance = 1;
     for(var x=-1; x<1; x++)
     {
         for(var y=-1; y<1; y++)
@@ -189,12 +189,12 @@ var checkDiff = function(scene, value, tx, ty)
                 if(tile)
                 {
                     var dist = (value/tile.value>tile.value/value?value/tile.value:tile.value/value);
-                    distance += dist*dist;
+                    distance *= dist;
                 }
                 else
                 {
                     var dist = (value/2)
-                    distance += dist*dist;
+                    distance *= dist;
                 }
             }
         }
