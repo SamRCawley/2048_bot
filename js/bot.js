@@ -75,13 +75,13 @@ var recursive_diffs = function(gm, dir, counter)
         delete cells;
     }
     else if(!scene.movesAvailable())
-        distance = 50000;
+        distance = 5000;
     else if(counter >=3)
     {
       var avail = scene.grid.availableCells().length;
-      if(avail < 9)
+      if(avail < 6)
       {
-        distance *= (9-avail);
+        distance *= (6-avail);
       }
     }
     delete scene;
@@ -215,7 +215,7 @@ var computeDifferences = function(scene)
           if (tile) {
                 value = tile.value;
           }
-          var tileMulti = 1;
+          var tileMulti = 0;
           if(x-1 > 0 && x+1 < 4)
           {
             var rValue = 2;
@@ -229,7 +229,7 @@ var computeDifferences = function(scene)
                     lValue = left.value;
               }
             if((value > rValue && value > lValue) || (value < rValue && value < lValue))
-              tileMulti++;
+              tileMulti+=10;
           }
           if(y-1 > 0 && y+1 < 4)
           {
@@ -244,7 +244,7 @@ var computeDifferences = function(scene)
                       dValue = down.value;
                 }
               if((value > dValue && value > uValue) || (value < dValue && value < uValue))
-                tileMulti++;
+                tileMulti+=10;
           }
 
           if(x+1 < 4)
@@ -254,9 +254,12 @@ var computeDifferences = function(scene)
             if (right) {
                     rValue = right.value;
               }
-            var dist = (value/rValue>rValue/value?value/rValue:rValue/value);
-            distance *= dist+tileMulti;
-            //distance += Math.abs(value-rValue);
+            var a = value / rValue;
+            var b = rValue/value;
+            var dist = (a>b?a:b);
+            distance += dist+tileMulti;
+            //distance += Math.abs(value-rValue)*tileMulti;
+
           }
           if(y+1 < 4)
           {
@@ -265,8 +268,11 @@ var computeDifferences = function(scene)
               if (down) {
                       dValue = down.value;
                 }
-              var dist = (value/dValue>dValue/value?value/dValue:dValue/value);
-              distance *= dist+tileMulti;
+              var a = value / dValue;
+              var b = dValue/value;
+              var dist = (a>b?a:b);
+              distance += dist+tileMulti;
+              //distance += Math.abs(value-dValue)*tileMulti;
           }
         }
       }
