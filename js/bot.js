@@ -30,39 +30,58 @@ var bot = function(){
 
 var recursive_diffs = function(gm, dir, counter)
 {
-    var distance = 0;
+    counter++;
+    var distance = computePairDistances(gm);
     var scene = runScenerio(gm, dir);
-    if(counter < 6 && scene.movesAvailable())
+    if(counter < 3 && scene.movesAvailable())
     {
         var cells = scene.grid.availableCells();
+         var pathCount = 1;
         for(var j=0; j<cells.length; j++)
         {
             var bestOfSet = Number.MAX_VALUE;
+
             for(var i=0; i<4; i++)
             {
                  var be = new botEngine(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
-                 be.grid = new Grid(gm.grid.size, gm.grid.serialize().cells);
+                 be.grid = new Grid(scene.grid.size, scene.grid.serialize().cells);
                  var tile = new Tile(cells[j], 2);
                  be.grid.insertTile(tile);
+                 var bFour = new botEngine(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
+                  bFour.grid = new Grid(scene.grid.size, scene.grid.serialize().cells);
+                  tile = new Tile(cells[j], 4);
+                  bFour.grid.insertTile(tile);
                  if(runScenerio(be, i).moved)
                  {
-                     var s_diff = recursive_diffs(be, i, ++counter);
-                      if(runScenerio(be, i).grid.availableCells().length < 5)
+                     var s_diffTwo = 0.9*recursive_diffs(be, i, counter);
+                     var s_diffFour= 0.1*recursive_diffs(bFour, i, counter);
+                     var s_diff = s_diffTwo+s_diffFour;
+                     var avail = runScenerio(be, i).grid.availableCells().length;
+                      if(avail < 8)
                       {
-                        s_diff += 1000;
+                        s_diff += 500*(8-avail);
                       }
                      if(s_diff<bestOfSet)
+                     {
+                        pathCount++;
                         bestOfSet = s_diff;
-
+                     }
+                     if(s_diff<1)
+                     {
+                        var k=0;
+                     }
                  }
+                 delete be;
+                 delete bFour;
             }
             distance += bestOfSet;
         }
+        distance = distance/pathCount; //average of paths
+        delete cells;
     }
-    else if(counter>=6)
-        distance = computePairDistances(scene);
-    else
-        distance = 100000;
+    else if(!scene.movesAvailable())
+        distance = 50000;
+    delete scene;
     return distance;
 };
 
@@ -164,17 +183,17 @@ var checkDiff = function(scene, value, tx, ty)
     {
         for(var y=-1; y<1; y++)
         {
-            if(tx+x>0 && tx+x<4 && ty+y>0 && ty+y<4 && (x==0 || y==0))
+            if(tx+x>0 && tx+x<4 && ty+y>0 && ty+y<4) // && (x==0 || y==0) //for only non-diagonal
             {
                 var tile = scene.grid.cellContent({x:tx+x, y:ty+y});
                 if(tile)
                 {
-                    var dist = (value/tile.value>tile.value/value?value/tile.value:tile.value/value)-1;
+                    var dist = (value/tile.value>tile.value/value?value/tile.value:tile.value/value);
                     distance += dist*dist;
                 }
                 else
                 {
-                    var dist = (value/2)-1
+                    var dist = (value/2)
                     distance += dist*dist;
                 }
             }
