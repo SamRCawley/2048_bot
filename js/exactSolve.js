@@ -27,11 +27,50 @@ var serialize = function(scene)
     return serialized;
 };
 
-var averageMaxTile = function(scene, dir)
+var averageMaxTile = function(gm, dir)
 {
     //@todo if scene indexed return avgMax from index else...
     var scene = runScenerio(scene, dir);
-    var ends = 0;
+    if(!scene.moved)
+        return 0;
+    var cells = scene.grid.availableCells();
+    var pathCount = 0;
+    var total = 0;
+    for(var j=0; j<cells.length; j++)
+    {
+        var bestOfSet = 0;
+        for(var i=0; i<4; i++)
+        {
+             var be = new botEngine(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
+             be.grid = new Grid(scene.grid.size, scene.grid.serialize().cells);
+             var tile = new Tile(cells[j], 2);
+             be.grid.insertTile(tile);
+             var bFour = new botEngine(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
+              bFour.grid = new Grid(scene.grid.size, scene.grid.serialize().cells);
+              tile = new Tile(cells[j], 4);
+              bFour.grid.insertTile(tile);
+             var s_diffTwo = 0;
+             var s_diffFour = 0;
+             if(!be.movesAvailable())
+                s_diffTwo = 0.9*getMax(be);
+             else
+                 s_diffTwo = 0.9*averageMaxTile(be, dir);
+             if(!bFour.movesAvailable())
+                s_diffFour = 0.1*getMax(be);
+             else
+                 s_diffFour= 0.1*averageMaxTile(bFour, dir);
+             var s_diff = s_diffTwo+s_diffFour;
+             if(s_diff>bestOfSet)
+             {
+                pathCount++;
+                bestOfSet = s_diff;
+             }
+         }
+         delete be;
+         delete bFour;
+         total += bestOfSet;
+    }
+    return avg/pathCount;
 }
 
 var getBestDirection(scene){
